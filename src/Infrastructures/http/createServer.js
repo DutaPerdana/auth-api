@@ -16,6 +16,10 @@ const createServer = async (container) => {
   // 1. Body Parser: Agar server bisa membaca data JSON dari client
   app.use(express.json());
 
+  app.get('/', (req, res) => {
+    res.status(200).json({ data: 'Hello world!' });
+  });
+
   // 2. API Routing: Jalur utama untuk fitur-fitur User
   app.use('/users', users(container));
 
