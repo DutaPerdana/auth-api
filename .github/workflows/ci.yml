@@ -1,0 +1,69 @@
+# Nama workflow yang akan muncul di tab 'Actions' GitHub
+name: Continuous Integration
+
+# Kapan robot ini harus bekerja?
+on: 
+  pull_request: # Setiap ada Pull Request (PR)
+    branches:
+      - master # Yang ditujukan ke branch master (ganti 'main' jika perlu)
+
+jobs:
+  # Nama pekerjaan yang dilakukan
+  test:
+    # Menggunakan komputer virtual dengan OS Ubuntu versi terbaru
+    runs-on: ubuntu-latest
+
+    # Strategi untuk menjalankan tes di versi Node.js tertentu
+    strategy:
+      matrix:
+        node-version: ['24.11.0']
+   
+    # Menyiapkan database PostgreSQL sementara di awan untuk keperluan testing
+    services:
+      postgres:
+        image: postgres # Mengambil image postgres resmi dari Docker Hub
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: mysecretpassword
+          POSTGRES_DB: forumapi_test
+        
+        # Memastikan database sudah benar-benar nyala sebelum dipakai tes
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432 # Membuka jalur komunikasi database di port standar 5432
+
+    # Urutan langkah-langkah yang dilakukan si robot
+    steps:
+    # Langkah 1: Copy kodingan kamu dari GitHub ke dalam komputer virtual Ubuntu
+    - uses: actions/checkout@v2
+
+    # Langkah 2: Install Node.js di komputer virtual sesuai versi di matrix
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Langkah 3: Proses instalasi library, migrasi database, dan eksekusi testing
+    - name: npm install migrate and test
+      run: |
+        npm ci # Install library (lebih bersih & cepat daripada 'npm install' di lingkungan CI)
+        npm run migrate up # Membuat tabel database di Postgres virtual
+        npm run test # Menjalankan perintah test (Vitest/Jest)
+      
+      # Settingan Environment Variable (pengganti file .env) khusus untuk testing di GitHub
+      env:
+        CI: true
+        HOST: localhost
+        PORT: 3000
+        PGHOST: localhost
+        PGPORT: 5432
+        PGUSER: postgres
+        PGPASSWORD: mysecretpassword
+        PGDATABASE: forumapi_test
+        ACCESS_TOKEN_KEY: secret
+        REFRESH_TOKEN_KEY: terces
+        ACCESS_TOKEN_AGE: 3600
