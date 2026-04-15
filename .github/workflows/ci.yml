@@ -5,7 +5,7 @@ name: Continuous Integration
 on: 
   pull_request: # Setiap ada Pull Request (PR)
     branches:
-      - master # Yang ditujukan ke branch master (ganti 'main' jika perlu)
+      - main # Yang ditujukan ke branch master (ganti 'main' jika perlu)
 
 jobs:
   # Nama pekerjaan yang dilakukan
